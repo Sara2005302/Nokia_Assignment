@@ -1,0 +1,648 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "BZ_QT-QuLttl",
+        "outputId": "e0ece25e-ecb3-4058-8859-d0562fc1fed1"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Requirement already satisfied: python-docx in /usr/local/lib/python3.11/dist-packages (1.1.2)\n",
+            "Requirement already satisfied: lxml>=3.1.0 in /usr/local/lib/python3.11/dist-packages (from python-docx) (5.4.0)\n",
+            "Requirement already satisfied: typing-extensions>=4.9.0 in /usr/local/lib/python3.11/dist-packages (from python-docx) (4.13.2)\n"
+          ]
+        }
+      ],
+      "source": [
+        "!pip install python-docx"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from google.colab import files\n",
+        "\n",
+        "uploaded = files.upload()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 73
+        },
+        "id": "gzDZ8qYaMHUT",
+        "outputId": "25ee3b5f-fc55-483c-9f1d-e8c6daf89970"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ],
+            "text/html": [
+              "\n",
+              "     <input type=\"file\" id=\"files-6f567910-750d-4435-90e9-7ff487bd1d04\" name=\"files[]\" multiple disabled\n",
+              "        style=\"border:none\" />\n",
+              "     <output id=\"result-6f567910-750d-4435-90e9-7ff487bd1d04\">\n",
+              "      Upload widget is only available when the cell has been executed in the\n",
+              "      current browser session. Please rerun this cell to enable.\n",
+              "      </output>\n",
+              "      <script>// Copyright 2017 Google LLC\n",
+              "//\n",
+              "// Licensed under the Apache License, Version 2.0 (the \"License\");\n",
+              "// you may not use this file except in compliance with the License.\n",
+              "// You may obtain a copy of the License at\n",
+              "//\n",
+              "//      http://www.apache.org/licenses/LICENSE-2.0\n",
+              "//\n",
+              "// Unless required by applicable law or agreed to in writing, software\n",
+              "// distributed under the License is distributed on an \"AS IS\" BASIS,\n",
+              "// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n",
+              "// See the License for the specific language governing permissions and\n",
+              "// limitations under the License.\n",
+              "\n",
+              "/**\n",
+              " * @fileoverview Helpers for google.colab Python module.\n",
+              " */\n",
+              "(function(scope) {\n",
+              "function span(text, styleAttributes = {}) {\n",
+              "  const element = document.createElement('span');\n",
+              "  element.textContent = text;\n",
+              "  for (const key of Object.keys(styleAttributes)) {\n",
+              "    element.style[key] = styleAttributes[key];\n",
+              "  }\n",
+              "  return element;\n",
+              "}\n",
+              "\n",
+              "// Max number of bytes which will be uploaded at a time.\n",
+              "const MAX_PAYLOAD_SIZE = 100 * 1024;\n",
+              "\n",
+              "function _uploadFiles(inputId, outputId) {\n",
+              "  const steps = uploadFilesStep(inputId, outputId);\n",
+              "  const outputElement = document.getElementById(outputId);\n",
+              "  // Cache steps on the outputElement to make it available for the next call\n",
+              "  // to uploadFilesContinue from Python.\n",
+              "  outputElement.steps = steps;\n",
+              "\n",
+              "  return _uploadFilesContinue(outputId);\n",
+              "}\n",
+              "\n",
+              "// This is roughly an async generator (not supported in the browser yet),\n",
+              "// where there are multiple asynchronous steps and the Python side is going\n",
+              "// to poll for completion of each step.\n",
+              "// This uses a Promise to block the python side on completion of each step,\n",
+              "// then passes the result of the previous step as the input to the next step.\n",
+              "function _uploadFilesContinue(outputId) {\n",
+              "  const outputElement = document.getElementById(outputId);\n",
+              "  const steps = outputElement.steps;\n",
+              "\n",
+              "  const next = steps.next(outputElement.lastPromiseValue);\n",
+              "  return Promise.resolve(next.value.promise).then((value) => {\n",
+              "    // Cache the last promise value to make it available to the next\n",
+              "    // step of the generator.\n",
+              "    outputElement.lastPromiseValue = value;\n",
+              "    return next.value.response;\n",
+              "  });\n",
+              "}\n",
+              "\n",
+              "/**\n",
+              " * Generator function which is called between each async step of the upload\n",
+              " * process.\n",
+              " * @param {string} inputId Element ID of the input file picker element.\n",
+              " * @param {string} outputId Element ID of the output display.\n",
+              " * @return {!Iterable<!Object>} Iterable of next steps.\n",
+              " */\n",
+              "function* uploadFilesStep(inputId, outputId) {\n",
+              "  const inputElement = document.getElementById(inputId);\n",
+              "  inputElement.disabled = false;\n",
+              "\n",
+              "  const outputElement = document.getElementById(outputId);\n",
+              "  outputElement.innerHTML = '';\n",
+              "\n",
+              "  const pickedPromise = new Promise((resolve) => {\n",
+              "    inputElement.addEventListener('change', (e) => {\n",
+              "      resolve(e.target.files);\n",
+              "    });\n",
+              "  });\n",
+              "\n",
+              "  const cancel = document.createElement('button');\n",
+              "  inputElement.parentElement.appendChild(cancel);\n",
+              "  cancel.textContent = 'Cancel upload';\n",
+              "  const cancelPromise = new Promise((resolve) => {\n",
+              "    cancel.onclick = () => {\n",
+              "      resolve(null);\n",
+              "    };\n",
+              "  });\n",
+              "\n",
+              "  // Wait for the user to pick the files.\n",
+              "  const files = yield {\n",
+              "    promise: Promise.race([pickedPromise, cancelPromise]),\n",
+              "    response: {\n",
+              "      action: 'starting',\n",
+              "    }\n",
+              "  };\n",
+              "\n",
+              "  cancel.remove();\n",
+              "\n",
+              "  // Disable the input element since further picks are not allowed.\n",
+              "  inputElement.disabled = true;\n",
+              "\n",
+              "  if (!files) {\n",
+              "    return {\n",
+              "      response: {\n",
+              "        action: 'complete',\n",
+              "      }\n",
+              "    };\n",
+              "  }\n",
+              "\n",
+              "  for (const file of files) {\n",
+              "    const li = document.createElement('li');\n",
+              "    li.append(span(file.name, {fontWeight: 'bold'}));\n",
+              "    li.append(span(\n",
+              "        `(${file.type || 'n/a'}) - ${file.size} bytes, ` +\n",
+              "        `last modified: ${\n",
+              "            file.lastModifiedDate ? file.lastModifiedDate.toLocaleDateString() :\n",
+              "                                    'n/a'} - `));\n",
+              "    const percent = span('0% done');\n",
+              "    li.appendChild(percent);\n",
+              "\n",
+              "    outputElement.appendChild(li);\n",
+              "\n",
+              "    const fileDataPromise = new Promise((resolve) => {\n",
+              "      const reader = new FileReader();\n",
+              "      reader.onload = (e) => {\n",
+              "        resolve(e.target.result);\n",
+              "      };\n",
+              "      reader.readAsArrayBuffer(file);\n",
+              "    });\n",
+              "    // Wait for the data to be ready.\n",
+              "    let fileData = yield {\n",
+              "      promise: fileDataPromise,\n",
+              "      response: {\n",
+              "        action: 'continue',\n",
+              "      }\n",
+              "    };\n",
+              "\n",
+              "    // Use a chunked sending to avoid message size limits. See b/62115660.\n",
+              "    let position = 0;\n",
+              "    do {\n",
+              "      const length = Math.min(fileData.byteLength - position, MAX_PAYLOAD_SIZE);\n",
+              "      const chunk = new Uint8Array(fileData, position, length);\n",
+              "      position += length;\n",
+              "\n",
+              "      const base64 = btoa(String.fromCharCode.apply(null, chunk));\n",
+              "      yield {\n",
+              "        response: {\n",
+              "          action: 'append',\n",
+              "          file: file.name,\n",
+              "          data: base64,\n",
+              "        },\n",
+              "      };\n",
+              "\n",
+              "      let percentDone = fileData.byteLength === 0 ?\n",
+              "          100 :\n",
+              "          Math.round((position / fileData.byteLength) * 100);\n",
+              "      percent.textContent = `${percentDone}% done`;\n",
+              "\n",
+              "    } while (position < fileData.byteLength);\n",
+              "  }\n",
+              "\n",
+              "  // All done.\n",
+              "  yield {\n",
+              "    response: {\n",
+              "      action: 'complete',\n",
+              "    }\n",
+              "  };\n",
+              "}\n",
+              "\n",
+              "scope.google = scope.google || {};\n",
+              "scope.google.colab = scope.google.colab || {};\n",
+              "scope.google.colab._files = {\n",
+              "  _uploadFiles,\n",
+              "  _uploadFilesContinue,\n",
+              "};\n",
+              "})(self);\n",
+              "</script> "
+            ]
+          },
+          "metadata": {}
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Saving 21900-i10.docx to 21900-i10.docx\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import re\n",
+        "from docx import Document\n",
+        "\n",
+        "def clean_docx_text(file_path):\n",
+        "    doc = Document(file_path)\n",
+        "\n",
+        "    raw_paragraphs = [para.text.strip() for para in doc.paragraphs if para.text.strip()]\n",
+        "\n",
+        "    full_text = ' '.join(raw_paragraphs)\n",
+        "\n",
+        "    cleaned_text = re.sub(r'\\s+', ' ', full_text).strip()\n",
+        "\n",
+        "    print(cleaned_text[:500] + \"...\")\n",
+        "    print(\"-------------------------------------------------------------------\\n\")\n",
+        "\n",
+        "    return cleaned_text"
+      ],
+      "metadata": {
+        "id": "E0A8RJNRM4XH"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "file_path = \"21900-i10.docx\"\n",
+        "document_content = clean_docx_text(file_path)\n",
+        "print(\"--- A sample of the parsed and cleaned text (first 500 chars) ---\")\n",
+        "print(document_content[:500] + \"...\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "DwDSDjkGOQQH",
+        "outputId": "ec6237e4-2013-4a41-f9d9-cabdbc6916d4"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Contents Foreword 5 Introduction 5 1 Scope 6 1A References 6 2 Definitions and abbreviations 6 3 General responsibilities of the Support Team 7 3.1 Specifications, meetings and liaisons 7 3.2 Registration of code points 8 4 Handling of Specifications 9 4.0 Numbering scheme 9 4.0A Version nomenclature 12 4.0B Releases 12 4.1 Overview 13 4.1.1 General 13 4.1.2 Role of the specification rapporteur 14 4.2 Characteristics of a specification 14 4.3 Characteristics of a major version of a specification...\n",
+            "-------------------------------------------------------------------\n",
+            "\n",
+            "--- A sample of the parsed and cleaned text (first 500 chars) ---\n",
+            "Contents Foreword 5 Introduction 5 1 Scope 6 1A References 6 2 Definitions and abbreviations 6 3 General responsibilities of the Support Team 7 3.1 Specifications, meetings and liaisons 7 3.2 Registration of code points 8 4 Handling of Specifications 9 4.0 Numbering scheme 9 4.0A Version nomenclature 12 4.0B Releases 12 4.1 Overview 13 4.1.1 General 13 4.1.2 Role of the specification rapporteur 14 4.2 Characteristics of a specification 14 4.3 Characteristics of a major version of a specification...\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import nltk\n",
+        "from nltk.tokenize import sent_tokenize\n",
+        "from transformers import AutoTokenizer\n",
+        "\n",
+        "nltk.download('punkt')\n",
+        "nltk.download('punkt_tab') # <<< ADD THIS LINE HERE TO FIX LookupError >>>\n",
+        "\n",
+        "def split_text_to_chunks(text, chunk_size=512, model_name=\"sentence-transformers/all-MiniLM-L6-v2\"):\n",
+        "    \"\"\"\n",
+        "    Splits text into chunks of max chunk_size tokens, preserving sentences.\n",
+        "\n",
+        "    Args:\n",
+        "      text (str): Input text to split.\n",
+        "      chunk_size (int): Max tokens per chunk.\n",
+        "      model_name (str): HuggingFace tokenizer model name.\n",
+        "\n",
+        "    Returns:\n",
+        "      List[str]: List of text chunks.\n",
+        "    \"\"\"\n",
+        "    tokenizer = AutoTokenizer.from_pretrained(model_name)\n",
+        "    sentences = sent_tokenize(text)\n",
+        "\n",
+        "    chunks = []\n",
+        "    current_chunk = \"\"\n",
+        "    current_len = 0\n",
+        "\n",
+        "    for sentence in sentences:\n",
+        "        sentence_tokens = tokenizer.tokenize(sentence)\n",
+        "        if current_len + len(sentence_tokens) <= chunk_size:\n",
+        "            current_chunk += \" \" + sentence\n",
+        "            current_len += len(sentence_tokens)\n",
+        "        else:\n",
+        "            chunks.append(current_chunk.strip())\n",
+        "            current_chunk = sentence\n",
+        "            current_len = len(sentence_tokens)\n",
+        "\n",
+        "    if current_chunk:\n",
+        "        chunks.append(current_chunk.strip())\n",
+        "\n",
+        "    return chunks\n",
+        "\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "a89q90ZAQNno",
+        "outputId": "89854f95-54c0-4005-9668-85fc920de931"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "[nltk_data] Downloading package punkt to /root/nltk_data...\n",
+            "[nltk_data]   Package punkt is already up-to-date!\n",
+            "[nltk_data] Downloading package punkt_tab to /root/nltk_data...\n",
+            "[nltk_data]   Package punkt_tab is already up-to-date!\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "chunks = split_text_to_chunks(document_content)\n",
+        "print(f\"\\nDocument split into {len(chunks)} chunks.\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "qxHA6SXZw_PS",
+        "outputId": "42dc66fd-66b6-4e6e-ce0c-5ad07855e6d7"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "/usr/local/lib/python3.11/dist-packages/huggingface_hub/utils/_auth.py:94: UserWarning: \n",
+            "The secret `HF_TOKEN` does not exist in your Colab secrets.\n",
+            "To authenticate with the Hugging Face Hub, create a token in your settings tab (https://huggingface.co/settings/tokens), set it as secret in your Google Colab and restart your session.\n",
+            "You will be able to reuse this secret in all of your notebooks.\n",
+            "Please note that authentication is recommended but still optional to access public models or datasets.\n",
+            "  warnings.warn(\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "Document split into 39 chunks.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from sentence_transformers import SentenceTransformer\n",
+        "\n",
+        "# Initialize the sentence-transformer model (suitable for Gemma 3)\n",
+        "model_name = \"all-MiniLM-L6-v2\"  # lightweight, 384-dim embeddings, commonly used with Gemma\n",
+        "embedder = SentenceTransformer(model_name)\n",
+        "\n",
+        "def get_embeddings(chunks):\n",
+        "    \"\"\"\n",
+        "    Convert list of text chunks into their embeddings.\n",
+        "\n",
+        "    Args:\n",
+        "      chunks (List[str]): List of text chunks.\n",
+        "\n",
+        "    Returns:\n",
+        "      List[List[float]]: List of embedding vectors (lists of floats).\n",
+        "    \"\"\"\n",
+        "    embeddings = embedder.encode(chunks, convert_to_tensor=False)\n",
+        "    return embeddings"
+      ],
+      "metadata": {
+        "id": "ThKCXPGLQ3GI"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!pip install pymilvus milvus-lite sentence-transformers"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "HcnrzPU_Suji",
+        "outputId": "1fb5dc0f-ff20-4325-f906-2c3eec737949"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Requirement already satisfied: pymilvus in /usr/local/lib/python3.11/dist-packages (2.5.10)\n",
+            "Requirement already satisfied: milvus-lite in /usr/local/lib/python3.11/dist-packages (2.4.12)\n",
+            "Requirement already satisfied: sentence-transformers in /usr/local/lib/python3.11/dist-packages (4.1.0)\n",
+            "Requirement already satisfied: setuptools>69 in /usr/local/lib/python3.11/dist-packages (from pymilvus) (75.2.0)\n",
+            "Requirement already satisfied: grpcio<=1.67.1,>=1.49.1 in /usr/local/lib/python3.11/dist-packages (from pymilvus) (1.67.1)\n",
+            "Requirement already satisfied: protobuf>=3.20.0 in /usr/local/lib/python3.11/dist-packages (from pymilvus) (5.29.4)\n",
+            "Requirement already satisfied: python-dotenv<2.0.0,>=1.0.1 in /usr/local/lib/python3.11/dist-packages (from pymilvus) (1.1.0)\n",
+            "Requirement already satisfied: ujson>=2.0.0 in /usr/local/lib/python3.11/dist-packages (from pymilvus) (5.10.0)\n",
+            "Requirement already satisfied: pandas>=1.2.4 in /usr/local/lib/python3.11/dist-packages (from pymilvus) (2.2.2)\n",
+            "Requirement already satisfied: tqdm in /usr/local/lib/python3.11/dist-packages (from milvus-lite) (4.67.1)\n",
+            "Requirement already satisfied: transformers<5.0.0,>=4.41.0 in /usr/local/lib/python3.11/dist-packages (from sentence-transformers) (4.52.2)\n",
+            "Requirement already satisfied: torch>=1.11.0 in /usr/local/lib/python3.11/dist-packages (from sentence-transformers) (2.6.0+cu124)\n",
+            "Requirement already satisfied: scikit-learn in /usr/local/lib/python3.11/dist-packages (from sentence-transformers) (1.6.1)\n",
+            "Requirement already satisfied: scipy in /usr/local/lib/python3.11/dist-packages (from sentence-transformers) (1.15.3)\n",
+            "Requirement already satisfied: huggingface-hub>=0.20.0 in /usr/local/lib/python3.11/dist-packages (from sentence-transformers) (0.31.4)\n",
+            "Requirement already satisfied: Pillow in /usr/local/lib/python3.11/dist-packages (from sentence-transformers) (11.2.1)\n",
+            "Requirement already satisfied: typing_extensions>=4.5.0 in /usr/local/lib/python3.11/dist-packages (from sentence-transformers) (4.13.2)\n",
+            "Requirement already satisfied: filelock in /usr/local/lib/python3.11/dist-packages (from huggingface-hub>=0.20.0->sentence-transformers) (3.18.0)\n",
+            "Requirement already satisfied: fsspec>=2023.5.0 in /usr/local/lib/python3.11/dist-packages (from huggingface-hub>=0.20.0->sentence-transformers) (2025.3.2)\n",
+            "Requirement already satisfied: packaging>=20.9 in /usr/local/lib/python3.11/dist-packages (from huggingface-hub>=0.20.0->sentence-transformers) (24.2)\n",
+            "Requirement already satisfied: pyyaml>=5.1 in /usr/local/lib/python3.11/dist-packages (from huggingface-hub>=0.20.0->sentence-transformers) (6.0.2)\n",
+            "Requirement already satisfied: requests in /usr/local/lib/python3.11/dist-packages (from huggingface-hub>=0.20.0->sentence-transformers) (2.32.3)\n",
+            "Requirement already satisfied: numpy>=1.23.2 in /usr/local/lib/python3.11/dist-packages (from pandas>=1.2.4->pymilvus) (2.0.2)\n",
+            "Requirement already satisfied: python-dateutil>=2.8.2 in /usr/local/lib/python3.11/dist-packages (from pandas>=1.2.4->pymilvus) (2.9.0.post0)\n",
+            "Requirement already satisfied: pytz>=2020.1 in /usr/local/lib/python3.11/dist-packages (from pandas>=1.2.4->pymilvus) (2025.2)\n",
+            "Requirement already satisfied: tzdata>=2022.7 in /usr/local/lib/python3.11/dist-packages (from pandas>=1.2.4->pymilvus) (2025.2)\n",
+            "Requirement already satisfied: networkx in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (3.4.2)\n",
+            "Requirement already satisfied: jinja2 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (3.1.6)\n",
+            "Requirement already satisfied: nvidia-cuda-nvrtc-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (12.4.127)\n",
+            "Requirement already satisfied: nvidia-cuda-runtime-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (12.4.127)\n",
+            "Requirement already satisfied: nvidia-cuda-cupti-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (12.4.127)\n",
+            "Requirement already satisfied: nvidia-cudnn-cu12==9.1.0.70 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (9.1.0.70)\n",
+            "Requirement already satisfied: nvidia-cublas-cu12==12.4.5.8 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (12.4.5.8)\n",
+            "Requirement already satisfied: nvidia-cufft-cu12==11.2.1.3 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (11.2.1.3)\n",
+            "Requirement already satisfied: nvidia-curand-cu12==10.3.5.147 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (10.3.5.147)\n",
+            "Requirement already satisfied: nvidia-cusolver-cu12==11.6.1.9 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (11.6.1.9)\n",
+            "Requirement already satisfied: nvidia-cusparse-cu12==12.3.1.170 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (12.3.1.170)\n",
+            "Requirement already satisfied: nvidia-cusparselt-cu12==0.6.2 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (0.6.2)\n",
+            "Requirement already satisfied: nvidia-nccl-cu12==2.21.5 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (2.21.5)\n",
+            "Requirement already satisfied: nvidia-nvtx-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (12.4.127)\n",
+            "Requirement already satisfied: nvidia-nvjitlink-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (12.4.127)\n",
+            "Requirement already satisfied: triton==3.2.0 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (3.2.0)\n",
+            "Requirement already satisfied: sympy==1.13.1 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (1.13.1)\n",
+            "Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.11/dist-packages (from sympy==1.13.1->torch>=1.11.0->sentence-transformers) (1.3.0)\n",
+            "Requirement already satisfied: regex!=2019.12.17 in /usr/local/lib/python3.11/dist-packages (from transformers<5.0.0,>=4.41.0->sentence-transformers) (2024.11.6)\n",
+            "Requirement already satisfied: tokenizers<0.22,>=0.21 in /usr/local/lib/python3.11/dist-packages (from transformers<5.0.0,>=4.41.0->sentence-transformers) (0.21.1)\n",
+            "Requirement already satisfied: safetensors>=0.4.3 in /usr/local/lib/python3.11/dist-packages (from transformers<5.0.0,>=4.41.0->sentence-transformers) (0.5.3)\n",
+            "Requirement already satisfied: joblib>=1.2.0 in /usr/local/lib/python3.11/dist-packages (from scikit-learn->sentence-transformers) (1.5.0)\n",
+            "Requirement already satisfied: threadpoolctl>=3.1.0 in /usr/local/lib/python3.11/dist-packages (from scikit-learn->sentence-transformers) (3.6.0)\n",
+            "Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.11/dist-packages (from python-dateutil>=2.8.2->pandas>=1.2.4->pymilvus) (1.17.0)\n",
+            "Requirement already satisfied: MarkupSafe>=2.0 in /usr/local/lib/python3.11/dist-packages (from jinja2->torch>=1.11.0->sentence-transformers) (3.0.2)\n",
+            "Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.11/dist-packages (from requests->huggingface-hub>=0.20.0->sentence-transformers) (3.4.2)\n",
+            "Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.11/dist-packages (from requests->huggingface-hub>=0.20.0->sentence-transformers) (3.10)\n",
+            "Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.11/dist-packages (from requests->huggingface-hub>=0.20.0->sentence-transformers) (2.4.0)\n",
+            "Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.11/dist-packages (from requests->huggingface-hub>=0.20.0->sentence-transformers) (2025.4.26)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import os\n",
+        "from pymilvus import MilvusClient, DataType, FieldSchema, CollectionSchema\n",
+        "import numpy as np # Needed because get_embeddings might return numpy array\n",
+        "\n",
+        "MILVUS_DB_FILE = \"my_milvus_db_simple.db\"\n",
+        "\n",
+        "if os.path.exists(MILVUS_DB_FILE):\n",
+        "    os.remove(MILVUS_DB_FILE)\n",
+        "\n",
+        "client = MilvusClient(uri=MILVUS_DB_FILE)\n",
+        "\n",
+        "# Generate embeddings for chunks using the get_embeddings function\n",
+        "embeddings = get_embeddings(chunks) # Uses the 'chunks' variable\n",
+        "\n",
+        "# Prepare data for Milvus insertion\n",
+        "data_to_insert = []\n",
+        "for i, chunk_text in enumerate(chunks):\n",
+        "    data_to_insert.append({\n",
+        "        \"text\": chunk_text,\n",
+        "        \"embedding\": embeddings[i].tolist()\n",
+        "    })\n",
+        "\n",
+        "collection_name = \"assignment_chunks\"\n",
+        "vector_dim = embeddings.shape[1]\n",
+        "\n",
+        "fields = [\n",
+        "    FieldSchema(name=\"id\", dtype=DataType.INT64, is_primary=True, auto_id=True),\n",
+        "    FieldSchema(name=\"embedding\", dtype=DataType.FLOAT_VECTOR, dim=vector_dim),\n",
+        "    FieldSchema(name=\"text\", dtype=DataType.VARCHAR, max_length=65535)\n",
+        "]\n",
+        "schema = CollectionSchema(fields)\n",
+        "\n",
+        "client.create_collection(collection_name=collection_name, schema=schema, overwrite=True)\n",
+        "\n",
+        "index_params = client.prepare_index_params()\n",
+        "index_params.add_index(\n",
+        "    field_name=\"embedding\",\n",
+        "    index_type=\"IVF_FLAT\",\n",
+        "    metric_type=\"COSINE\",\n",
+        "    params={\"nlist\": 128}\n",
+        ")\n",
+        "client.create_index(collection_name=collection_name, index_params=index_params)\n",
+        "\n",
+        "client.insert(collection_name=collection_name, data=data_to_insert)\n",
+        "\n",
+        "print(f\"\\nMilvus database setup and data insertion complete.\")\n",
+        "print(f\"Total entities in collection '{collection_name}': {client.get_collection_stats(collection_name)['row_count']}\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "zQ8F6987SpRR",
+        "outputId": "07047aed-8439-4e31-a202-24dbff3c54c0"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "Milvus database setup and data insertion complete.\n",
+            "Total entities in collection 'assignment_chunks': 39\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "question = input(\"Enter your query question: \")\n",
+        "\n",
+        "query_embedding = embedder.encode([question]).tolist()\n",
+        "\n",
+        "top_k = 3\n",
+        "\n",
+        "search_results = client.search(\n",
+        "    collection_name=\"assignment_chunks\",\n",
+        "    data=query_embedding,\n",
+        "    limit=top_k,\n",
+        "    output_fields=[\"text\"],\n",
+        "    search_params={\"nprobe\": 10}\n",
+        ")\n",
+        "\n",
+        "print(f\"\\n📌 Top {top_k} matches for: '{question}'\")\n",
+        "for i, hit in enumerate(search_results[0]):\n",
+        "    print(f\"\\nResult {i+1}:\\n{hit['text']}\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "L4_Oir_pzcgz",
+        "outputId": "de72f44c-1752-4a62-bb6f-973f33cac11a"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Enter your query question: What are the definitions and abbreviations?\n",
+            "\n",
+            "📌 Top 3 matches for: 'What are the definitions and abbreviations?'\n",
+            "\n",
+            "Result 1:\n",
+            "specification: generic term standing for Technical Specification and Technical Report. Study Item (SI): type of Work Item which will conduct feasibility studies and will result in a Technical Report Study Item description (SID): description of a Study Item in a standard Work Item Description sheet. TSG: Technical Specification Group. TSG change control: specification status in which the Technical Specification Group is responsible for approval of Change Requests. TSG sub-group: Working Group or subgroup of a Working Group or of a Sub-Group. Working Group (WG): official subgroup of a TSG reporting to that TSG. WG Change Control: specification status in which the Working Group is responsible for agreeing Change Requests for submission to the TSG for approval. version: unique identifier in the form x.y.z for a specification at a given point in time. Example: version 3.12.3. withdrawn: specification status in which the given version of the specification no longer belongs to the appropriate set of valid specifications. Work Item (WI): description of an enhancement to a technical area, which may be categorized as Study Item, Feature, Building Block or Work Task. Work Item description (WID): description of a Work Item in a standard Work Item Description sheet. work task: sub-division of a building block, representing a self-contained, well-scoped and well-scheduled item of work. 3 General responsibilities of the Support Team 3.1 Specifications, meetings and liaisons The Support Team is responsible for the management of the work of the TSGs. This includes editorship and management of specifications once they have been put under TSG change control. It also includes preparation of and support for the meetings (including meeting reports) of the TSGs and their Working Groups, and subgroups in descending priority. It furthermore includes liaison with other bodies and relevant groups and institutions. 3.2 Registration of code points In the course of 3GPP's work, it will from time to time be necessary to register code points in protocols maintained by bodies other than 3GPP, for example, Multipurpose Internet Mail Extensions (MIME) types registered with the Internet Assigned Numbers Authority (IANA, http://www.iana.org/). Wherever possible, registration of such code points shall be entrusted to the 3GPP Support Team rather than being performed by an individual delegate.\n",
+            "\n",
+            "Result 2:\n",
+            "[3] 3GPP TS 21.101: \"Technical Specifications and Technical Reports for a UTRAN-based 3GPP system\". [4] 3GPP TS 41.101: \"Technical Specifications and Technical Reports for a GERAN-based 3GPP system\". [5] ITU-T Recommendation I.130: \"Method for the characterization of telecommunication services supported by an ISDN and network capabilities of an ISDN\". [6] 3GPP TS 29.501: \"5G System; Principles and Guidelines for Services Definition; Stage 3\". [7] IETF RFC 3629: \"UTF-8, a transformation format of ISO 10646\". 2 Definitions and abbreviations For the purposes of the present document, the following terms and those in 3GPP TR 21.905 [2] apply. building block: sub-division of a feature, representing a coherent set of technical functionality which would generally be expected to reside in a single system element. change control: procedure whereby proposed modifications to a specification are presented for approval to the TSG as formal Change Requests. closed: release status in which no changes of any kind to the specification are permitted. Change Request (CR): formal proposal presented on a standard form to modify a specification which is under change control. draft: specification status prior to change control, in which changes may be made without formal Change Requests. early implementation: implementation of a particular feature on a platform of a release earlier than the release that contains the feature. feature: new or substantially enhanced functionality which represents added value to the existing system. frozen: release status in which only essential corrections are permitted. functionality: normative text contained in one or more Technical Specifications, corresponding either to a feature or to some portion of a feature. group: TSG or TSG sub-group. major version: For version x.y.z of a specification, x is called the major version. Example: For version 3.2.0 of a specification, the major version is 3. Mobile Competence Centre (MCC): The permanent secretariat, or support team, of 3GPP. pseudo Change Request (pCR): similar to a Change Request but has no CR number and is intended to propose new or revised text for inclusion in 3GPP TSs or TRs not yet under change control (i.e. still in the drafting phase). Known in some groups as \"text proposal\".\n",
+            "\n",
+            "Result 3:\n",
+            "Contents Foreword 5 Introduction 5 1 Scope 6 1A References 6 2 Definitions and abbreviations 6 3 General responsibilities of the Support Team 7 3.1 Specifications, meetings and liaisons 7 3.2 Registration of code points 8 4 Handling of Specifications 9 4.0 Numbering scheme 9 4.0A Version nomenclature 12 4.0B Releases 12 4.1 Overview 13 4.1.1 General 13 4.1.2 Role of the specification rapporteur 14 4.2 Characteristics of a specification 14 4.3 Characteristics of a major version of a specification 15 4.4 Characteristics of a version of a specification 16 4.5 (void) 16 4.6 Change Request regime 16 4.6.1 Change Requests 16 4.6.2 Change Request forms 17 4.6.3 Contents of Change Requests 19 4.6.4 Handling of the Change Requests 19 4.6.5 Updating and release of new versions of the specifications 20 4.6.6 Other changes to specifications 20 4.7 \"Freezing\" of specifications 20 4.8 \"Closing\" of specifications 21 4.9 \"Withdrawing\" of specifications 21 4.9A \"Withdrawing\" of functionality 21 4.9B Procedure for withdrawing of specifications and functionality 21 4.9B.1 (void) 21 4.9B.2 Diligent assessment 21 4.9B.3 Changes to affected specifications 22 4.9B.4 Considerations for ongoing maintenance, enhancement and new Release versions of specifications 22 4.10 Release control 22 4.10.1 Creation of a new Release version of a specification 22 4.10.1.0 General 22 4.10.1.1 With no technical changes compared to the previous Release 22 4.10.1.2 When introducing technical changes 22 4.10.1.3 Specifications not propagated to next Release 22 4.10.2 Mirror Change Requests 23 4.10.3 Release mechanisms 23 4.10.3.1 Corrections to Releases 23 4.10.3.2 New features 24 4.10.3.3 Release naming 24 4.10.3.4 Introduction of features into Releases 24 4.10.3.5 Early implementation of features 25 5 Availability and distribution of specifications 25 5A File naming conventions 25 5B Availability and distribution of OpenAPI specification files 28 6 Work Items 29 6.0 Introduction 29 6.0.1 Introduction: why manage a project? 29 6.0.2 How to manage a project?\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
